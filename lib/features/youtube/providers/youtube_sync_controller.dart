@@ -5,8 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'youtube_provider.dart';
 
-final youtubeSyncControllerProvider =
-    Provider<YoutubeSyncController>((ref) {
+final youtubeSyncControllerProvider = Provider<YoutubeSyncController>((ref) {
   return YoutubeSyncController(ref);
 });
 
@@ -28,10 +27,11 @@ class YoutubeSyncController {
   void listen({
     required String roomCode,
     required void Function(
-      String videoId,
-      bool isPlaying,
-      double position,
-    ) onRemoteChanged,
+  String videoId,
+  bool isPlaying,
+  double position,
+  int updatedAt,
+) onRemoteChanged,
   }) {
     _subscription?.cancel();
 
@@ -39,44 +39,41 @@ class YoutubeSyncController {
         .read(youTubeRepositoryProvider)
         .videoStream(roomCode)
         .listen((event) {
-      final snapshot = event.snapshot;
+          final snapshot = event.snapshot;
 
-      if (!snapshot.exists) return;
+          if (!snapshot.exists) return;
 
-      final map =
-          Map<String, dynamic>.from(snapshot.value as Map);
+          final map = Map<String, dynamic>.from(snapshot.value as Map);
 
-      final videoId = map['videoId'] ?? '';
+          final videoId = map['videoId'] ?? '';
 
-      final isPlaying = map['isPlaying'] ?? false;
+          final isPlaying = map['isPlaying'] ?? false;
 
-      final position =
-          (map['position'] ?? 0).toDouble();
+          final position = (map['position'] ?? 0).toDouble();
 
-      if (_ignoreNextRemoteUpdate) {
-        _ignoreNextRemoteUpdate = false;
-        return;
-      }
+          final controllerUid = map['controllerUid'] ?? '';
 
-      onRemoteChanged(
-        videoId,
-        isPlaying,
-        position,
-      );
-    });
+          final updatedAt = map['updatedAt'] ?? 0;
+
+          if (controllerUid == FirebaseAuth.instance.currentUser!.uid) {
+            return;
+          }
+
+          onRemoteChanged(videoId, isPlaying, position,  updatedAt);
+        });
   }
 
   Future<void> loadVideo({
     required String roomCode,
     required String videoId,
   }) async {
-    _ignoreNextRemoteUpdate = true;
 
-    await ref.read(youTubeRepositoryProvider).loadVideo(
+    await ref
+        .read(youTubeRepositoryProvider)
+        .loadVideo(
           roomCode: roomCode,
           videoId: videoId,
-          controllerUid:
-              FirebaseAuth.instance.currentUser!.uid,
+          controllerUid: FirebaseAuth.instance.currentUser!.uid,
         );
   }
 
@@ -84,13 +81,13 @@ class YoutubeSyncController {
     required String roomCode,
     required double position,
   }) async {
-    _ignoreNextRemoteUpdate = true;
 
-    await ref.read(youTubeRepositoryProvider).play(
+    await ref
+        .read(youTubeRepositoryProvider)
+        .play(
           roomCode: roomCode,
           position: position,
-          controllerUid:
-              FirebaseAuth.instance.currentUser!.uid,
+          controllerUid: FirebaseAuth.instance.currentUser!.uid,
         );
   }
 
@@ -98,13 +95,13 @@ class YoutubeSyncController {
     required String roomCode,
     required double position,
   }) async {
-    _ignoreNextRemoteUpdate = true;
 
-    await ref.read(youTubeRepositoryProvider).pause(
+    await ref
+        .read(youTubeRepositoryProvider)
+        .pause(
           roomCode: roomCode,
           position: position,
-          controllerUid:
-              FirebaseAuth.instance.currentUser!.uid,
+          controllerUid: FirebaseAuth.instance.currentUser!.uid,
         );
   }
 
@@ -113,14 +110,14 @@ class YoutubeSyncController {
     required double position,
     required bool isPlaying,
   }) async {
-    _ignoreNextRemoteUpdate = true;
 
-    await ref.read(youTubeRepositoryProvider).seek(
+    await ref
+        .read(youTubeRepositoryProvider)
+        .seek(
           roomCode: roomCode,
           position: position,
           isPlaying: isPlaying,
-          controllerUid:
-              FirebaseAuth.instance.currentUser!.uid,
+          controllerUid: FirebaseAuth.instance.currentUser!.uid,
         );
   }
 }

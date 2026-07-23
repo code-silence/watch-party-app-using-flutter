@@ -43,18 +43,29 @@ class _SyncedYoutubePlayerState extends ConsumerState<SyncedYoutubePlayer> {
         .read(youtubeSyncControllerProvider)
         .listen(
           roomCode: widget.roomCode,
-          onRemoteChanged: (videoId, isPlaying, position) async {
+          onRemoteChanged: (videoId, isPlaying, position, updatedAt) async {
             if (videoId.isEmpty) return;
+            double startPosition = position;
+
+            if (isPlaying && updatedAt > 0) {
+              final elapsed =
+                  (DateTime.now().millisecondsSinceEpoch - updatedAt) / 1000;
+
+              startPosition += elapsed;
+            }
 
             if (currentVideoId != videoId) {
               await controller.loadVideoById(
                 videoId: videoId,
-                startSeconds: position,
+                startSeconds: startPosition,
               );
 
               currentVideoId = videoId;
             } else {
-              await controller.seekTo(seconds: position, allowSeekAhead: true);
+              await controller.seekTo(
+                seconds: startPosition,
+                allowSeekAhead: true,
+              );
             }
 
             if (isPlaying) {
@@ -92,11 +103,13 @@ class _SyncedYoutubePlayerState extends ConsumerState<SyncedYoutubePlayer> {
       loadingVideo = true;
     });
 
+    await controller.loadVideoById(videoId: id, startSeconds: 0);
+
+    currentVideoId = id;
+
     await ref
         .read(youtubeSyncControllerProvider)
         .loadVideo(roomCode: widget.roomCode, videoId: id);
-        currentVideoId = id;
-
     setState(() {
       loadingVideo = false;
     });
@@ -121,10 +134,6 @@ class _SyncedYoutubePlayerState extends ConsumerState<SyncedYoutubePlayer> {
             decoration: InputDecoration(
               hintText: "Paste YouTube URL",
               border: OutlineInputBorder(),
-              suffixIcon: IconButton(
-                onPressed: loadingVideo ? null : loadVideo,
-                icon: const Icon(Icons.send),
-              ),
             ),
           ),
 
@@ -136,11 +145,17 @@ class _SyncedYoutubePlayerState extends ConsumerState<SyncedYoutubePlayer> {
             children: [
               FilledButton(
                 onPressed: () async {
+                  final id = YoutubeUtils.extractVideoId(urlController.text);
+
+                  if (id != null && id != currentVideoId) {
+                    await loadVideo();
+                  }
+
                   controller.playVideo();
 
                   final pos = await controller.currentTime;
 
-                  ref
+                  await ref
                       .read(youtubeSyncControllerProvider)
                       .play(roomCode: widget.roomCode, position: pos);
                 },
@@ -161,6 +176,7 @@ class _SyncedYoutubePlayerState extends ConsumerState<SyncedYoutubePlayer> {
               FilledButton(
                 onPressed: () async {
                   final pos = await controller.currentTime;
+                  final state = await controller.playerState;
 
                   final newPosition = pos + 10;
 
@@ -169,15 +185,49 @@ class _SyncedYoutubePlayerState extends ConsumerState<SyncedYoutubePlayer> {
                     allowSeekAhead: true,
                   );
 
-                  ref
+                  await ref
                       .read(youtubeSyncControllerProvider)
                       .seek(
                         roomCode: widget.roomCode,
                         position: newPosition,
-                        isPlaying: true,
+                        isPlaying: state == PlayerState.playing,
                       );
                 },
                 child: const Text("+10s"),
+              ),
+              FilledButton(
+                onPressed: () async {
+                  currentVideoId = null;
+
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Refresh requested')),
+                  );
+                },
+                child: const Text("Refresh"),
+              ),
+              FilledButton(
+                onPressed: () async {
+                  final pos = await controller.currentTime;
+                  final state = await controller.playerState;
+
+                  final newPosition = (pos - 10)
+                      .clamp(0.0, double.infinity)
+                      .toDouble();
+
+                  await controller.seekTo(
+                    seconds: newPosition,
+                    allowSeekAhead: true,
+                  );
+
+                  await ref
+                      .read(youtubeSyncControllerProvider)
+                      .seek(
+                        roomCode: widget.roomCode,
+                        position: newPosition,
+                        isPlaying: state == PlayerState.playing,
+                      );
+                },
+                child: const Text("-10s"),
               ),
             ],
           ),
