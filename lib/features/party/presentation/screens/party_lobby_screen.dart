@@ -9,6 +9,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../../../youtube/presentation/widgets/synced_youtube_player.dart';
 import '../../providers/heartbeat_provider.dart';
 import '../../../chat/widgets/party_chat.dart';
+import '../../../chat/widgets/chat_input.dart';
 
 class PartyLobbyScreen extends ConsumerStatefulWidget {
   const PartyLobbyScreen({super.key, required this.roomCode});
@@ -96,52 +97,70 @@ class _PartyLobbyScreenState extends ConsumerState<PartyLobbyScreen> {
 
     return Scaffold(
       resizeToAvoidBottomInset: true,
-      appBar: AppBar(title: const Text('Party Lobby')),
-      body: room.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text(e.toString())),
-        data: (party) {
-          if (party == null) {
-            return const Center(child: Text('Room not found'));
-          }
-          final isHost =
-              party.hostUid == FirebaseAuth.instance.currentUser!.uid;
+      appBar: AppBar(
+        title: const Text('Party Lobby'),
+        actions: [
+          IconButton(
+            tooltip: 'Leave',
+            icon: const Icon(Icons.logout),
+            onPressed: () async {
+              await ref
+                  .read(partyControllerProvider.notifier)
+                  .leaveRoom(widget.roomCode);
 
-          final lastHeartbeat = party.lastHeartbeat;
+              if (context.mounted) {
+                context.go('/home');
+              }
+            },
+          ),
+        ],
+      ),
+      body: SafeArea(
+        child: room.when(
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (e, _) => Center(child: Text(e.toString())),
+          data: (party) {
+            if (party == null) {
+              return const Center(child: Text('Room not found'));
+            }
+            final isHost =
+                party.hostUid == FirebaseAuth.instance.currentUser!.uid;
 
-          if (!isHost && lastHeartbeat != null) {
-            final now = DateTime.now().millisecondsSinceEpoch;
+            final lastHeartbeat = party.lastHeartbeat;
 
-            final difference = now - lastHeartbeat;
+            if (!isHost && lastHeartbeat != null) {
+              final now = DateTime.now().millisecondsSinceEpoch;
 
-            if (difference > 100000) {
-              WidgetsBinding.instance.addPostFrameCallback((_) async {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    backgroundColor: Colors.red,
-                    content: Text('Host went offline. Party ended.'),
-                  ),
-                );
+              final difference = now - lastHeartbeat;
 
-                await ref
-                    .read(partyControllerProvider.notifier)
-                    .leaveRoom(widget.roomCode);
+              if (difference > 100000) {
+                WidgetsBinding.instance.addPostFrameCallback((_) async {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      backgroundColor: Colors.red,
+                      content: Text('Host went offline. Party ended.'),
+                    ),
+                  );
 
-                if (context.mounted) {
-                  context.go('/home');
-                }
+                  await ref
+                      .read(partyControllerProvider.notifier)
+                      .leaveRoom(widget.roomCode);
+
+                  if (context.mounted) {
+                    context.go('/home');
+                  }
+                });
+              }
+            }
+            if (isHost) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                ref.read(heartbeatServiceProvider).start(widget.roomCode);
               });
             }
-          }
-          if (isHost) {
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              ref.read(heartbeatServiceProvider).start(widget.roomCode);
-            });
-          }
 
-          return SafeArea(
-            child: Padding(
+            return Padding(
               padding: const EdgeInsets.all(20),
+
               child: Column(
                 children: [
                   Row(
@@ -175,89 +194,65 @@ class _PartyLobbyScreenState extends ConsumerState<PartyLobbyScreen> {
 
                   const SizedBox(height: 12),
 
-                  ExpansionTile(
-                    initiallyExpanded: false,
-                    title: Text('Participants (${party.participants.length})'),
-                    leading: const Icon(Icons.people),
-                    children: [
-                      SizedBox(
-                        height: 140,
-                        child: ListView.builder(
-                          itemCount: party.participants.length,
-                          itemBuilder: (_, index) {
-                            final entry = party.participants.entries.elementAt(
-                              index,
-                            );
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: FilledButton.icon(
+                      icon: const Icon(Icons.people),
+                      label: Text(
+                        'Participants (${party.participants.length})',
+                      ),
+                      onPressed: () {
+                        showModalBottomSheet(
+                          context: context,
+                          showDragHandle: true,
+                          builder: (_) {
+                            return SizedBox(
+                              height: 350,
+                              child: ListView.builder(
+                                itemCount: party.participants.length,
+                                itemBuilder: (_, index) {
+                                  final entry = party.participants.entries
+                                      .elementAt(index);
 
-                            final uid = entry.key;
-                            final user = entry.value;
+                                  final uid = entry.key;
+                                  final user = entry.value;
 
-                            return ListTile(
-                              leading: CircleAvatar(
-                                backgroundImage: AssetImage(
-                                  'assets/avatars/${user['avatar']}',
-                                ),
+                                  return ListTile(
+                                    leading: CircleAvatar(
+                                      backgroundImage: AssetImage(
+                                        'assets/avatars/${user['avatar']}',
+                                      ),
+                                    ),
+                                    title: Text(user['displayName']),
+                                    trailing: uid == party.hostUid
+                                        ? const Chip(label: Text('Host'))
+                                        : null,
+                                  );
+                                },
                               ),
-                              title: Text(user['displayName']),
-                              trailing: uid == party.hostUid
-                                  ? const Chip(label: Text('Host'))
-                                  : null,
                             );
                           },
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  const Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      'Party Chat',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
+                        );
+                      },
                     ),
                   ),
 
                   const SizedBox(height: 8),
 
-                  Flexible(
+                  Expanded(
                     child: Card(
                       clipBehavior: Clip.antiAlias,
                       child: PartyChat(roomCode: widget.roomCode),
                     ),
                   ),
+                  ChatInput(roomCode: widget.roomCode),
 
-                  const SizedBox(height: 16),
-
-                  SizedBox(
-                    width: double.infinity,
-                    child: FilledButton.icon(
-                      onPressed: () async {
-                        await ref
-                            .read(partyControllerProvider.notifier)
-                            .leaveRoom(widget.roomCode);
-
-                        if (!context.mounted) return;
-
-                        context.go('/home');
-                      },
-                      icon: const Icon(Icons.exit_to_app),
-                      label: Text(
-                        party.hostUid == FirebaseAuth.instance.currentUser!.uid
-                            ? 'End Party'
-                            : 'Leave Party',
-                      ),
-                    ),
-                  ),
+                  const SizedBox(height: 8),
                 ],
               ),
-            ),
-          );
-        },
+            );
+          },
+        ),
       ),
     );
   }

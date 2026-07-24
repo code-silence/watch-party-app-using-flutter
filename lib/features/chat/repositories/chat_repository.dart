@@ -1,6 +1,6 @@
 import 'package:firebase_database/firebase_database.dart';
 
-import '../..../../../auth/data/services/auth_service.dart';
+import '../../auth/data/services/auth_service.dart';
 import '../models/chat_message.dart';
 
 class ChatRepository {
