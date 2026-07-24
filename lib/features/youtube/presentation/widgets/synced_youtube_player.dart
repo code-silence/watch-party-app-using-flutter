@@ -38,6 +38,18 @@ class _SyncedYoutubePlayerState extends ConsumerState<SyncedYoutubePlayer> {
         strictRelatedVideos: true,
       ),
     );
+    controller.listen(
+  (value) async {
+    if (value.playerState == PlayerState.ended) {
+      await ref.read(youtubeSyncControllerProvider).pause(
+        roomCode: widget.roomCode,
+        position: 0,
+      );
+
+      currentVideoId = null;
+    }
+  },
+);
 
     ref
         .read(youtubeSyncControllerProvider)
@@ -141,9 +153,12 @@ class _SyncedYoutubePlayerState extends ConsumerState<SyncedYoutubePlayer> {
 
         if (isHost)
           Wrap(
-            spacing: 12,
+            alignment: WrapAlignment.center,
+            spacing: 8,
+            runSpacing: 8,
             children: [
-              FilledButton(
+              IconButton.filled(
+                tooltip: 'Play',
                 onPressed: () async {
                   final id = YoutubeUtils.extractVideoId(urlController.text);
 
@@ -159,9 +174,9 @@ class _SyncedYoutubePlayerState extends ConsumerState<SyncedYoutubePlayer> {
                       .read(youtubeSyncControllerProvider)
                       .play(roomCode: widget.roomCode, position: pos);
                 },
-                child: const Text("Play"),
+                icon: const Icon(Icons.play_arrow),
               ),
-              FilledButton(
+              IconButton.filled(
                 onPressed: () async {
                   controller.pauseVideo();
 
@@ -171,9 +186,9 @@ class _SyncedYoutubePlayerState extends ConsumerState<SyncedYoutubePlayer> {
                       .read(youtubeSyncControllerProvider)
                       .pause(roomCode: widget.roomCode, position: pos);
                 },
-                child: const Text("Pause"),
+                icon: const Icon(Icons.pause),
               ),
-              FilledButton(
+              IconButton.filled(
                 onPressed: () async {
                   final pos = await controller.currentTime;
                   final state = await controller.playerState;
@@ -193,9 +208,9 @@ class _SyncedYoutubePlayerState extends ConsumerState<SyncedYoutubePlayer> {
                         isPlaying: state == PlayerState.playing,
                       );
                 },
-                child: const Text("+10s"),
+                icon: const Icon(Icons.forward_10),
               ),
-              FilledButton(
+              IconButton.filled(
                 onPressed: () async {
                   currentVideoId = null;
 
@@ -203,9 +218,9 @@ class _SyncedYoutubePlayerState extends ConsumerState<SyncedYoutubePlayer> {
                     const SnackBar(content: Text('Refresh requested')),
                   );
                 },
-                child: const Text("Refresh"),
+                icon: const Icon(Icons.refresh),
               ),
-              FilledButton(
+              IconButton.filled(
                 onPressed: () async {
                   final pos = await controller.currentTime;
                   final state = await controller.playerState;
@@ -227,7 +242,7 @@ class _SyncedYoutubePlayerState extends ConsumerState<SyncedYoutubePlayer> {
                         isPlaying: state == PlayerState.playing,
                       );
                 },
-                child: const Text("-10s"),
+                icon: const Icon(Icons.replay_10),
               ),
             ],
           ),

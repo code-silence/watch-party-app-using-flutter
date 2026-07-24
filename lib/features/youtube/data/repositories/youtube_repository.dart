@@ -8,10 +8,7 @@ class YouTubeRepository {
   final AuthService _authService;
 
   DatabaseReference _videoRef(String roomCode) {
-    return _authService.database
-        .ref('rooms')
-        .child(roomCode)
-        .child('video');
+    return _authService.database.ref('rooms').child(roomCode).child('video');
   }
 
   Future<void> loadVideo({
@@ -48,7 +45,7 @@ class YouTubeRepository {
   }) async {
     await _videoRef(roomCode).update({
       'isPlaying': false,
-      'position': position,
+      'position': position < 0 ? 0 : position,
       'updatedAt': ServerValue.timestamp,
       'controllerUid': controllerUid,
     });

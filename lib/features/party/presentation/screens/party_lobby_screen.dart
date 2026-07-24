@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
@@ -6,15 +7,91 @@ import '../../providers/party_controller.dart';
 import '../../providers/party_provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../../youtube/presentation/widgets/synced_youtube_player.dart';
+import '../../providers/heartbeat_provider.dart';
 
-class PartyLobbyScreen extends ConsumerWidget {
+class PartyLobbyScreen extends ConsumerStatefulWidget {
   const PartyLobbyScreen({super.key, required this.roomCode});
 
   final String roomCode;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final room = ref.watch(partyRoomProvider(roomCode));
+  ConsumerState<PartyLobbyScreen> createState() => _PartyLobbyScreenState();
+}
+
+class _PartyLobbyScreenState extends ConsumerState<PartyLobbyScreen> {
+  Timer? _monitorTimer;
+  @override
+  void initState() {
+    super.initState();
+
+    _monitorTimer = Timer.periodic(const Duration(seconds: 10), (_) {
+      _checkHostHeartbeat();
+    });
+  }
+
+  Future<void> _checkHostHeartbeat() async {
+    final room = await ref
+        .read(partyRepositoryProvider)
+        .getRoom(widget.roomCode);
+
+    if (room == null) return;
+
+    final currentUid = FirebaseAuth.instance.currentUser!.uid;
+
+    final isHost = room.hostUid == currentUid;
+
+    if (isHost) return;
+
+    final lastHeartbeat = room.lastHeartbeat;
+
+    if (lastHeartbeat == null) return;
+
+    final now = DateTime.now().millisecondsSinceEpoch;
+
+    final difference = now - lastHeartbeat;
+
+    if (difference > 100000) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          backgroundColor: Colors.red,
+          content: Text('Host went offline. Party ended.'),
+        ),
+      );
+
+      await ref
+          .read(partyControllerProvider.notifier)
+          .deleteRoom(widget.roomCode);
+
+      if (mounted) {
+        context.go('/home');
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _monitorTimer?.cancel();
+
+    ref.read(heartbeatServiceProvider).stop();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final room = await ref
+          .read(partyRepositoryProvider)
+          .getRoom(widget.roomCode);
+      if (room != null &&
+          room.hostUid == FirebaseAuth.instance.currentUser?.uid) {
+        await ref.read(partyRepositoryProvider).deleteRoom(widget.roomCode);
+      }
+    });
+
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final room = ref.watch(partyRoomProvider(widget.roomCode));
 
     return Scaffold(
       appBar: AppBar(title: const Text('Party Lobby')),
@@ -24,6 +101,40 @@ class PartyLobbyScreen extends ConsumerWidget {
         data: (party) {
           if (party == null) {
             return const Center(child: Text('Room not found'));
+          }
+          final isHost =
+              party.hostUid == FirebaseAuth.instance.currentUser!.uid;
+
+          final lastHeartbeat = party.lastHeartbeat;
+
+          if (!isHost && lastHeartbeat != null) {
+            final now = DateTime.now().millisecondsSinceEpoch;
+
+            final difference = now - lastHeartbeat;
+
+            if (difference > 100000) {
+              WidgetsBinding.instance.addPostFrameCallback((_) async {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    backgroundColor: Colors.red,
+                    content: Text('Host went offline. Party ended.'),
+                  ),
+                );
+
+                await ref
+                    .read(partyControllerProvider.notifier)
+                    .leaveRoom(widget.roomCode);
+
+                if (context.mounted) {
+                  context.go('/home');
+                }
+              });
+            }
+          }
+          if (isHost) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              ref.read(heartbeatServiceProvider).start(widget.roomCode);
+            });
           }
 
           return ListView(
@@ -56,7 +167,7 @@ class PartyLobbyScreen extends ConsumerWidget {
 
               const SizedBox(height: 24),
 
-              SyncedYoutubePlayer(roomCode: roomCode),
+              SyncedYoutubePlayer(roomCode: widget.roomCode),
 
               const SizedBox(height: 24),
 
@@ -93,7 +204,7 @@ class PartyLobbyScreen extends ConsumerWidget {
                 onPressed: () async {
                   await ref
                       .read(partyControllerProvider.notifier)
-                      .leaveRoom(roomCode);
+                      .leaveRoom(widget.roomCode);
 
                   if (!context.mounted) return;
 

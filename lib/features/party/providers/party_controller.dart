@@ -35,4 +35,8 @@ class PartyController extends Notifier<bool> {
   Future<void> leaveRoom(String roomCode) async {
     await ref.read(partyRepositoryProvider).leaveRoom(roomCode);
   }
+
+  Future<void> deleteRoom(String roomCode) async {
+    await ref.read(partyRepositoryProvider).deleteRoom(roomCode);
+  }
 }

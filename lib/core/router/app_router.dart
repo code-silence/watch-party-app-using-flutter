@@ -12,14 +12,8 @@ import '../../features/party/presentation/screens/party_lobby_screen.dart';
 final appRouter = GoRouter(
   initialLocation: '/',
   routes: [
-    GoRoute(
-      path: '/',
-      builder: (context, state) => const SplashScreen(),
-    ),
-    GoRoute(
-      path: '/login',
-      builder: (context, state) => const LoginScreen(),
-    ),
+    GoRoute(path: '/', builder: (context, state) => const SplashScreen()),
+    GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
     GoRoute(
       path: '/register',
       builder: (context, state) => const RegisterScreen(),
@@ -28,29 +22,24 @@ final appRouter = GoRouter(
       path: '/forgot-password',
       builder: (context, state) => const ForgotPasswordScreen(),
     ),
+    GoRoute(path: '/home', builder: (context, state) => const HomeScreen()),
     GoRoute(
-      path: '/home',
-      builder: (context, state) => const HomeScreen(),
+      path: '/create-party',
+      builder: (context, state) => const CreatePartyScreen(),
     ),
+
     GoRoute(
-  path: '/create-party',
-  builder: (context, state) => const CreatePartyScreen(),
-),
+      path: '/join-party',
+      builder: (context, state) => const JoinPartyScreen(),
+    ),
 
-GoRoute(
-  path: '/join-party',
-  builder: (context, state) => const JoinPartyScreen(),
-),
+    GoRoute(
+      path: '/party/:roomCode',
+      builder: (context, state) {
+        final roomCode = state.pathParameters['roomCode']!;
 
-GoRoute(
-  path: '/party/:roomCode',
-  builder: (context, state) {
-    final roomCode = state.pathParameters['roomCode']!;
-
-    return PartyLobbyScreen(
-      roomCode: roomCode,
-    );
-  },
-),
+        return PartyLobbyScreen(roomCode: roomCode);
+      },
+    ),
   ],
 );

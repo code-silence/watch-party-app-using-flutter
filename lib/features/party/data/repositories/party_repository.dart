@@ -42,7 +42,9 @@ class PartyRepository {
       if (!exists.exists) break;
     }
 
-    await _roomsRef.child(roomCode).set({
+    final roomRef = _roomsRef.child(roomCode);
+
+    await roomRef.set({
       'hostUid': firebaseUser.uid,
       'video': {
         'videoId': '',
@@ -51,6 +53,7 @@ class PartyRepository {
         'updatedAt': ServerValue.timestamp,
       },
       'createdAt': ServerValue.timestamp,
+      'lastHeartbeat': ServerValue.timestamp,
       'participants': {
         firebaseUser.uid: {
           'displayName': user['displayName'],
@@ -58,6 +61,8 @@ class PartyRepository {
         },
       },
     });
+
+    roomRef.onDisconnect().remove();
 
     return roomCode;
   }
@@ -105,6 +110,26 @@ class PartyRepository {
     }
 
     await roomRef.child('participants').child(user.uid).remove();
+  }
+
+  Future<void> updateHeartbeat(String roomCode) async {
+    await _roomsRef.child(roomCode).update({
+      'lastHeartbeat': ServerValue.timestamp,
+    });
+  }
+
+  Future<void> deleteRoom(String roomCode) async {
+    await _roomsRef.child(roomCode).remove();
+  }
+
+  Future<PartyRoom?> getRoom(String roomCode) async {
+    final snapshot = await _roomsRef.child(roomCode).get();
+
+    if (!snapshot.exists) {
+      return null;
+    }
+
+    return PartyRoom.fromMap(roomCode, snapshot.value as Map<dynamic, dynamic>);
   }
 
   Stream<PartyRoom?> roomStream(String roomCode) {

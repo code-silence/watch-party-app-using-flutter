@@ -1,52 +1,26 @@
+import 'package:firebase_database/firebase_database.dart';
+
 import '../../../auth/data/services/auth_service.dart';
-import '../../../../shared/models/app_user.dart';
+import '../../models/profile_model.dart';
 
 class ProfileRepository {
-  ProfileRepository(this._service);
+  ProfileRepository(this._authService);
 
-  final AuthService _service;
+  final AuthService _authService;
 
-  Future<AppUser?> getProfile() async {
-    final user = _service.currentUser;
+  DatabaseReference get _usersRef => _authService.usersRef;
 
-    if (user == null) return null;
+  Future<ProfileModel> getProfile() async {
+    final uid = _authService.currentUser!.uid;
 
-    final snapshot = await _service.usersRef.child(user.uid).get();
+    final snapshot = await _usersRef.child(uid).get();
 
-    if (!snapshot.exists) return null;
+    final map = snapshot.value as Map<dynamic, dynamic>;
 
-    return AppUser.fromMap(
-      snapshot.value as Map<dynamic, dynamic>,
-    );
+    return ProfileModel.fromMap(uid, map);
   }
 
-  Future<void> updateDisplayName(String displayName) async {
-    final user = _service.currentUser;
-
-    if (user == null) return;
-
-    await _service.usersRef.child(user.uid).update({
-      'displayName': displayName.trim(),
-    });
+  Future<void> updateProfile(ProfileModel profile) async {
+    await _usersRef.child(profile.uid).update(profile.toMap());
   }
-
-  Future<void> updatePhotoUrl(String? photoUrl) async {
-    final user = _service.currentUser;
-
-    if (user == null) return;
-
-    await _service.usersRef.child(user.uid).update({
-      'photoUrl': photoUrl,
-    });
-  }
-
-  Future<AppUser?> getUserByUid(String uid) async {
-  final snapshot = await _service.usersRef.child(uid).get();
-
-  if (!snapshot.exists) return null;
-
-  return AppUser.fromMap(
-    snapshot.value as Map<dynamic, dynamic>,
-  );
-}
 }
