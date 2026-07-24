@@ -28,7 +28,7 @@ class AppUser {
       displayName: map['displayName'] ?? '',
       photoUrl: map['photoUrl'],
       createdAt: map['createdAt'] ?? 0,
-      avatar: map['avatar'] ?? 'Avatar A.jpg',
+      avatar: map['avatar'] ?? 'avatar_a.jpg',
     );
   }
 

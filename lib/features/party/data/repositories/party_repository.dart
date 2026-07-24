@@ -57,7 +57,7 @@ class PartyRepository {
       'participants': {
         firebaseUser.uid: {
           'displayName': user['displayName'],
-          'photoUrl': user['photoUrl'],
+          'avatar': user['avatar'],
         },
       },
     });
@@ -86,7 +86,7 @@ class PartyRepository {
 
     await roomRef.child('participants').child(firebaseUser.uid).set({
       'displayName': user['displayName'],
-      'photoUrl': user['photoUrl'],
+      'avatar': user['avatar'],
     });
   }
 

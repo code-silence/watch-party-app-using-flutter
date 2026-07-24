@@ -12,17 +12,21 @@ class ProfileModel {
   });
 
   factory ProfileModel.fromMap(String uid, Map<dynamic, dynamic> map) {
-    return ProfileModel(
-      uid: uid,
-      displayName: map['displayName'] ?? '',
-      email: map['email'] ?? '',
-      avatar: map['photoUrl'] ?? 'avatar_a.jpg',
-    );
-  }
+  return ProfileModel(
+    uid: uid,
+    displayName: map['displayName'] ?? '',
+    email: map['email'] ?? '',
+    avatar: map['avatar'] ?? 'avatar_a.jpg',
+  );
+}
 
-  Map<String, dynamic> toMap() {
-    return {'displayName': displayName, 'email': email, 'photoUrl': avatar};
-  }
+Map<String, dynamic> toMap() {
+  return {
+    'displayName': displayName,
+    'email': email,
+    'avatar': avatar,
+  };
+}
 
   ProfileModel copyWith({String? displayName, String? avatar}) {
     return ProfileModel(

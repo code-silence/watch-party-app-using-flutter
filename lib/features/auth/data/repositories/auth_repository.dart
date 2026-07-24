@@ -44,6 +44,7 @@ class AuthRepository {
         displayName: displayName.trim(),
         photoUrl: null,
         createdAt: 0,
+        avatar: 'avatar_a.jpg',
       );
 
       await _service.usersRef.child(firebaseUser.uid).set({

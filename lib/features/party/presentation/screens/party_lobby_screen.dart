@@ -8,6 +8,7 @@ import '../../providers/party_provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../../youtube/presentation/widgets/synced_youtube_player.dart';
 import '../../providers/heartbeat_provider.dart';
+import '../../../chat/widgets/party_chat.dart';
 
 class PartyLobbyScreen extends ConsumerStatefulWidget {
   const PartyLobbyScreen({super.key, required this.roomCode});
@@ -94,6 +95,7 @@ class _PartyLobbyScreenState extends ConsumerState<PartyLobbyScreen> {
     final room = ref.watch(partyRoomProvider(widget.roomCode));
 
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       appBar: AppBar(title: const Text('Party Lobby')),
       body: room.when(
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -137,87 +139,123 @@ class _PartyLobbyScreenState extends ConsumerState<PartyLobbyScreen> {
             });
           }
 
-          return ListView(
-            padding: const EdgeInsets.all(20),
-            children: [
-              Row(
+          return SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
                 children: [
-                  Expanded(
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          'Room: ${party.roomCode}',
+                          style: Theme.of(context).textTheme.titleLarge,
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: () async {
+                          await Clipboard.setData(
+                            ClipboardData(text: party.roomCode),
+                          );
+
+                          if (!context.mounted) return;
+
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Room code copied')),
+                          );
+                        },
+                        icon: const Icon(Icons.copy),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  SyncedYoutubePlayer(roomCode: widget.roomCode),
+
+                  const SizedBox(height: 12),
+
+                  ExpansionTile(
+                    initiallyExpanded: false,
+                    title: Text('Participants (${party.participants.length})'),
+                    leading: const Icon(Icons.people),
+                    children: [
+                      SizedBox(
+                        height: 140,
+                        child: ListView.builder(
+                          itemCount: party.participants.length,
+                          itemBuilder: (_, index) {
+                            final entry = party.participants.entries.elementAt(
+                              index,
+                            );
+
+                            final uid = entry.key;
+                            final user = entry.value;
+
+                            return ListTile(
+                              leading: CircleAvatar(
+                                backgroundImage: AssetImage(
+                                  'assets/avatars/${user['avatar']}',
+                                ),
+                              ),
+                              title: Text(user['displayName']),
+                              trailing: uid == party.hostUid
+                                  ? const Chip(label: Text('Host'))
+                                  : null,
+                            );
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  const Align(
+                    alignment: Alignment.centerLeft,
                     child: Text(
-                      'Room: ${party.roomCode}',
-                      style: Theme.of(context).textTheme.titleLarge,
+                      'Party Chat',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
-                  IconButton(
-                    onPressed: () async {
-                      await Clipboard.setData(
-                        ClipboardData(text: party.roomCode),
-                      );
 
-                      if (!context.mounted) return;
+                  const SizedBox(height: 8),
 
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Room code copied')),
-                      );
-                    },
-                    icon: const Icon(Icons.copy),
+                  Flexible(
+                    child: Card(
+                      clipBehavior: Clip.antiAlias,
+                      child: PartyChat(roomCode: widget.roomCode),
+                    ),
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  SizedBox(
+                    width: double.infinity,
+                    child: FilledButton.icon(
+                      onPressed: () async {
+                        await ref
+                            .read(partyControllerProvider.notifier)
+                            .leaveRoom(widget.roomCode);
+
+                        if (!context.mounted) return;
+
+                        context.go('/home');
+                      },
+                      icon: const Icon(Icons.exit_to_app),
+                      label: Text(
+                        party.hostUid == FirebaseAuth.instance.currentUser!.uid
+                            ? 'End Party'
+                            : 'Leave Party',
+                      ),
+                    ),
                   ),
                 ],
               ),
-
-              const SizedBox(height: 24),
-
-              SyncedYoutubePlayer(roomCode: widget.roomCode),
-
-              const SizedBox(height: 24),
-
-              const Text(
-                'Participants',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-
-              const SizedBox(height: 12),
-
-              ...party.participants.entries.map((entry) {
-                final uid = entry.key;
-                final user = entry.value;
-
-                return ListTile(
-                  leading: CircleAvatar(
-                    child: Text(
-                      user['displayName']
-                          .toString()
-                          .substring(0, 1)
-                          .toUpperCase(),
-                    ),
-                  ),
-                  title: Text(user['displayName'] ?? ''),
-                  subtitle: uid == party.hostUid
-                      ? const Text('Host')
-                      : const Text('Participant'),
-                );
-              }),
-
-              const SizedBox(height: 30),
-
-              FilledButton.icon(
-                onPressed: () async {
-                  await ref
-                      .read(partyControllerProvider.notifier)
-                      .leaveRoom(widget.roomCode);
-
-                  if (!context.mounted) return;
-
-                  context.go('/home');
-                },
-                icon: const Icon(Icons.exit_to_app),
-                label: Text(
-                  party.hostUid == FirebaseAuth.instance.currentUser!.uid
-                      ? 'End Party'
-                      : 'Leave Party',
-                ),
-              ),
-            ],
+            ),
           );
         },
       ),
