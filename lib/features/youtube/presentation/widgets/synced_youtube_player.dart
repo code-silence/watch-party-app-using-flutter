@@ -38,18 +38,15 @@ class _SyncedYoutubePlayerState extends ConsumerState<SyncedYoutubePlayer> {
         strictRelatedVideos: true,
       ),
     );
-    controller.listen(
-  (value) async {
-    if (value.playerState == PlayerState.ended) {
-      await ref.read(youtubeSyncControllerProvider).pause(
-        roomCode: widget.roomCode,
-        position: 0,
-      );
+    controller.listen((value) async {
+      if (value.playerState == PlayerState.ended) {
+        await ref
+            .read(youtubeSyncControllerProvider)
+            .pause(roomCode: widget.roomCode, position: 0);
 
-      currentVideoId = null;
-    }
-  },
-);
+        currentVideoId = null;
+      }
+    });
 
     ref
         .read(youtubeSyncControllerProvider)
@@ -130,123 +127,123 @@ class _SyncedYoutubePlayerState extends ConsumerState<SyncedYoutubePlayer> {
   @override
   Widget build(BuildContext context) {
     final isHost = ref.watch(isHostProvider(widget.roomCode));
+    final keyboardOpen = MediaQuery.of(context).viewInsets.bottom > 0;
 
-    return Column(
-      children: [
-        AspectRatio(
-          aspectRatio: 16 / 9,
-          child: YoutubePlayer(controller: controller),
-        ),
-
-        const SizedBox(height: 16),
-
-        if (isHost)
-          TextField(
-            controller: urlController,
-            decoration: InputDecoration(
-              hintText: "Paste YouTube URL",
-              border: OutlineInputBorder(),
+    return SingleChildScrollView(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox(
+            height: keyboardOpen ? 140 : 220,
+            child: YoutubePlayer(controller: controller),
+          ),
+          if (isHost) ...[
+            const SizedBox(height: 12),
+            TextField(
+              controller: urlController,
+              decoration: const InputDecoration(
+                hintText: "Paste YouTube URL",
+                border: OutlineInputBorder(),
+              ),
             ),
-          ),
+            const SizedBox(height: 12),
+            Wrap(
+              alignment: WrapAlignment.center,
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                IconButton.filled(
+                  tooltip: 'Play',
+                  onPressed: () async {
+                    final id = YoutubeUtils.extractVideoId(urlController.text);
 
-        const SizedBox(height: 16),
+                    if (id != null && id != currentVideoId) {
+                      await loadVideo();
+                    }
 
-        if (isHost)
-          Wrap(
-            alignment: WrapAlignment.center,
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              IconButton.filled(
-                tooltip: 'Play',
-                onPressed: () async {
-                  final id = YoutubeUtils.extractVideoId(urlController.text);
+                    controller.playVideo();
 
-                  if (id != null && id != currentVideoId) {
-                    await loadVideo();
-                  }
+                    final pos = await controller.currentTime;
 
-                  controller.playVideo();
+                    await ref
+                        .read(youtubeSyncControllerProvider)
+                        .play(roomCode: widget.roomCode, position: pos);
+                  },
+                  icon: const Icon(Icons.play_arrow),
+                ),
+                IconButton.filled(
+                  onPressed: () async {
+                    controller.pauseVideo();
 
-                  final pos = await controller.currentTime;
+                    final pos = await controller.currentTime;
 
-                  await ref
-                      .read(youtubeSyncControllerProvider)
-                      .play(roomCode: widget.roomCode, position: pos);
-                },
-                icon: const Icon(Icons.play_arrow),
-              ),
-              IconButton.filled(
-                onPressed: () async {
-                  controller.pauseVideo();
+                    ref
+                        .read(youtubeSyncControllerProvider)
+                        .pause(roomCode: widget.roomCode, position: pos);
+                  },
+                  icon: const Icon(Icons.pause),
+                ),
+                IconButton.filled(
+                  onPressed: () async {
+                    final pos = await controller.currentTime;
+                    final state = await controller.playerState;
 
-                  final pos = await controller.currentTime;
+                    final newPosition = pos + 10;
 
-                  ref
-                      .read(youtubeSyncControllerProvider)
-                      .pause(roomCode: widget.roomCode, position: pos);
-                },
-                icon: const Icon(Icons.pause),
-              ),
-              IconButton.filled(
-                onPressed: () async {
-                  final pos = await controller.currentTime;
-                  final state = await controller.playerState;
+                    await controller.seekTo(
+                      seconds: newPosition,
+                      allowSeekAhead: true,
+                    );
 
-                  final newPosition = pos + 10;
+                    await ref
+                        .read(youtubeSyncControllerProvider)
+                        .seek(
+                          roomCode: widget.roomCode,
+                          position: newPosition,
+                          isPlaying: state == PlayerState.playing,
+                        );
+                  },
+                  icon: const Icon(Icons.forward_10),
+                ),
+                IconButton.filled(
+                  onPressed: () async {
+                    currentVideoId = null;
 
-                  await controller.seekTo(
-                    seconds: newPosition,
-                    allowSeekAhead: true,
-                  );
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Refresh requested')),
+                    );
+                  },
+                  icon: const Icon(Icons.refresh),
+                ),
+                IconButton.filled(
+                  onPressed: () async {
+                    final pos = await controller.currentTime;
+                    final state = await controller.playerState;
 
-                  await ref
-                      .read(youtubeSyncControllerProvider)
-                      .seek(
-                        roomCode: widget.roomCode,
-                        position: newPosition,
-                        isPlaying: state == PlayerState.playing,
-                      );
-                },
-                icon: const Icon(Icons.forward_10),
-              ),
-              IconButton.filled(
-                onPressed: () async {
-                  currentVideoId = null;
+                    final newPosition = (pos - 10)
+                        .clamp(0.0, double.infinity)
+                        .toDouble();
 
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Refresh requested')),
-                  );
-                },
-                icon: const Icon(Icons.refresh),
-              ),
-              IconButton.filled(
-                onPressed: () async {
-                  final pos = await controller.currentTime;
-                  final state = await controller.playerState;
+                    await controller.seekTo(
+                      seconds: newPosition,
+                      allowSeekAhead: true,
+                    );
 
-                  final newPosition = (pos - 10)
-                      .clamp(0.0, double.infinity)
-                      .toDouble();
-
-                  await controller.seekTo(
-                    seconds: newPosition,
-                    allowSeekAhead: true,
-                  );
-
-                  await ref
-                      .read(youtubeSyncControllerProvider)
-                      .seek(
-                        roomCode: widget.roomCode,
-                        position: newPosition,
-                        isPlaying: state == PlayerState.playing,
-                      );
-                },
-                icon: const Icon(Icons.replay_10),
-              ),
-            ],
-          ),
-      ],
+                    await ref
+                        .read(youtubeSyncControllerProvider)
+                        .seek(
+                          roomCode: widget.roomCode,
+                          position: newPosition,
+                          isPlaying: state == PlayerState.playing,
+                        );
+                  },
+                  icon: const Icon(Icons.replay_10),
+                ),
+              ],
+            ),
+          ],
+        ],
+      ),
     );
   }
 }

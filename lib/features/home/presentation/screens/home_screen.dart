@@ -200,7 +200,7 @@ class HomeScreen extends ConsumerWidget {
                                         title: const Text('Edit Display Name'),
                                         content: TextField(
                                           controller: controller,
-                                          autofocus: true,
+                                         // autofocus: true,
                                           maxLength: 25,
                                           decoration: const InputDecoration(
                                             hintText: 'Display Name',
