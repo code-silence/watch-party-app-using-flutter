@@ -10,6 +10,6 @@ final profileRepositoryProvider = Provider<ProfileRepository>((ref) {
   );
 });
 
-final profileProvider = FutureProvider.autoDispose<ProfileModel>((ref) {
+final profileProvider = FutureProvider<ProfileModel>((ref) {
   return ref.read(profileRepositoryProvider).getProfile();
 });

@@ -6,6 +6,8 @@ import '../../../profile/providers/profile_provider.dart';
 import '../../../profile/providers/profile_controller.dart';
 import '../../../../../core/constants/avatar_constants.dart';
 import '../../../auth/providers/auth_controller.dart';
+import 'package:watch_nest/features/party/presentation/widgets/active_room_fab.dart';
+
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -20,6 +22,8 @@ class HomeScreen extends ConsumerWidget {
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(child: Text(e.toString())),
         data: (user) {
+          final isHosting =
+              user.activeRoomCode != null && user.activeRoomCode!.isNotEmpty;
           return SafeArea(
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(20),
@@ -200,7 +204,7 @@ class HomeScreen extends ConsumerWidget {
                                         title: const Text('Edit Display Name'),
                                         content: TextField(
                                           controller: controller,
-                                         // autofocus: true,
+                                          // autofocus: true,
                                           maxLength: 25,
                                           decoration: const InputDecoration(
                                             hintText: 'Display Name',
@@ -288,9 +292,11 @@ class HomeScreen extends ConsumerWidget {
                   SizedBox(
                     width: double.infinity,
                     child: FilledButton.icon(
-                      onPressed: () {
-                        context.push('/create-party');
-                      },
+                      onPressed: isHosting
+                          ? null
+                          : () {
+                        context.go('/join-party');
+                            },
                       icon: const Icon(Icons.add),
                       label: const Text('Create Party'),
                     ),
@@ -370,6 +376,7 @@ class HomeScreen extends ConsumerWidget {
           );
         },
       ),
+      floatingActionButton: const ActiveRoomFab(),
     );
   }
 }

@@ -78,42 +78,37 @@ class _PartyLobbyScreenState extends ConsumerState<PartyLobbyScreen> {
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
-      
       builder: (context) {
-  return DraggableScrollableSheet(
-    expand: false,
-    initialChildSize: 0.9,
-    maxChildSize: 0.95,
-    minChildSize: 0.6,
-    builder: (_, scrollController) {
-      return Column(
-        children: [
-          const SizedBox(height: 8),
-
-          const Text(
-            'Party Chat',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-
-          const Divider(),
-
-          Expanded(
-            child: PartyChat(
-              roomCode: widget.roomCode,
-            ),
-          ),
-
-          ChatInput(
-            roomCode: widget.roomCode,
-          ),
-        ],
-      );
-    },
-  );
-},
+        return DraggableScrollableSheet(
+          expand: false,
+          initialChildSize: 0.9,
+          maxChildSize: 0.95,
+          minChildSize: 0.6,
+          builder: (_, scrollController) {
+            return Column(
+              children: [
+                const SizedBox(height: 8),
+                const Text(
+                  'Party Chat',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const Divider(),
+                Expanded(
+                  child: PartyChat(
+                    roomCode: widget.roomCode,
+                  ),
+                ),
+                ChatInput(
+                  roomCode: widget.roomCode,
+                ),
+              ],
+            );
+          },
+        );
+      },
     );
   }
 
@@ -122,17 +117,6 @@ class _PartyLobbyScreenState extends ConsumerState<PartyLobbyScreen> {
     _monitorTimer?.cancel();
 
     ref.read(heartbeatServiceProvider).stop();
-
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      final room = await ref
-          .read(partyRepositoryProvider)
-          .getRoom(widget.roomCode);
-
-      if (room != null &&
-          room.hostUid == FirebaseAuth.instance.currentUser?.uid) {
-        await ref.read(partyRepositoryProvider).deleteRoom(widget.roomCode);
-      }
-    });
 
     super.dispose();
   }
@@ -184,7 +168,6 @@ class _PartyLobbyScreenState extends ConsumerState<PartyLobbyScreen> {
         }
 
         final isHost = party.hostUid == FirebaseAuth.instance.currentUser!.uid;
-
         final lastHeartbeat = party.lastHeartbeat;
 
         if (!isHost && lastHeartbeat != null) {
@@ -238,7 +221,6 @@ class _PartyLobbyScreenState extends ConsumerState<PartyLobbyScreen> {
                       _showParticipantsSheet(context, party);
                     },
                   ),
-
                   if (party.participants.isNotEmpty)
                     Positioned(
                       right: 8,
@@ -283,9 +265,10 @@ class _PartyLobbyScreenState extends ConsumerState<PartyLobbyScreen> {
             ],
           ),
           body: SafeArea(
-            child: Padding(
+            child: SingleChildScrollView(
               padding: const EdgeInsets.all(20),
               child: Column(
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   Row(
                     children: [
@@ -311,7 +294,7 @@ class _PartyLobbyScreenState extends ConsumerState<PartyLobbyScreen> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 16),
                   SyncedYoutubePlayer(roomCode: widget.roomCode),
                 ],
               ),

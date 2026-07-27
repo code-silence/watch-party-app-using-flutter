@@ -7,6 +7,7 @@ class AppUser {
   final String? photoUrl;
   final int createdAt;
   final String avatar;
+  final String? activeRoomCode;
 
   const AppUser({
     required this.uid,
@@ -17,6 +18,7 @@ class AppUser {
     this.photoUrl,
     required this.createdAt,
     required this.avatar,
+    this.activeRoomCode,
   });
 
   factory AppUser.fromMap(Map<dynamic, dynamic> map) {
@@ -29,6 +31,7 @@ class AppUser {
       photoUrl: map['photoUrl'],
       createdAt: map['createdAt'] ?? 0,
       avatar: map['avatar'] ?? 'avatar_a.jpg',
+      activeRoomCode: map['activeRoomCode'],
     );
   }
 
@@ -42,6 +45,7 @@ class AppUser {
       'photoUrl': photoUrl,
       'createdAt': createdAt,
       'avatar': avatar,
+      'activeRoomCode': activeRoomCode,
     };
   }
 
@@ -56,6 +60,7 @@ class AppUser {
     bool? isOnline,
     int? createdAt,
     int? lastSeen,
+    String? activeRoomCode,
   }) {
     return AppUser(
       uid: uid ?? this.uid,
@@ -66,6 +71,7 @@ class AppUser {
       photoUrl: photoUrl ?? this.photoUrl,
       createdAt: createdAt ?? this.createdAt,
       avatar: avatar ?? this.avatar,
+      activeRoomCode: activeRoomCode ?? this.activeRoomCode,
     );
   }
 }

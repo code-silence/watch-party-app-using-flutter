@@ -61,8 +61,7 @@ class PartyRepository {
         },
       },
     });
-
-    roomRef.onDisconnect().remove();
+    await setActiveRoomCode(roomCode);
 
     return roomCode;
   }
@@ -104,8 +103,10 @@ class PartyRepository {
       snapshot.value as Map<dynamic, dynamic>,
     );
 
+    //manual ends
     if (room.hostUid == user.uid) {
       await roomRef.remove();
+      await clearActiveRoomCode();
       return;
     }
 
@@ -143,5 +144,15 @@ class PartyRepository {
         event.snapshot.value as Map<dynamic, dynamic>,
       );
     });
+  }
+
+  Future<void> setActiveRoomCode(String roomCode) async {
+    final uid = _authService.currentUser!.uid;
+    await _authService.usersRef.child(uid).update({'activeRoomCode': roomCode});
+  }
+
+  Future<void> clearActiveRoomCode() async {
+    final uid = _authService.currentUser!.uid;
+    await _authService.usersRef.child(uid).update({'activeRoomCode': null});
   }
 }
