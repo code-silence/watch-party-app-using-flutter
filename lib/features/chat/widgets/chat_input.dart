@@ -34,11 +34,12 @@ class _ChatInputState extends ConsumerState<ChatInput> {
         bottom: MediaQuery.of(context).viewInsets.bottom,
       ),
       child: Material(
+        color: const Color(0xFF16181E),
         elevation: 8,
         child: SafeArea(
           top: false,
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
+            padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
             child: Row(
               children: [
                 Expanded(
@@ -46,16 +47,25 @@ class _ChatInputState extends ConsumerState<ChatInput> {
                     reverse: true,
                     child: TextField(
                       controller: _controller,
+                      style: const TextStyle(color: Colors.white, fontSize: 14),
                       textInputAction: TextInputAction.send,
                       onSubmitted: (_) => _send(),
                       maxLines: 1,
                       decoration: InputDecoration(
                         hintText: 'Type a message...',
-                        border: OutlineInputBorder(
+                        hintStyle: const TextStyle(color: Colors.white38, fontSize: 14),
+                        filled: true,
+                        fillColor: const Color(0xFF222530),
+                        enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(25),
+                          borderSide: BorderSide(color: Colors.white.withOpacity(0.08)),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(25),
+                          borderSide: const BorderSide(color: Colors.indigoAccent),
                         ),
                         contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
+                          horizontal: 20,
                           vertical: 12,
                         ),
                       ),
@@ -64,9 +74,11 @@ class _ChatInputState extends ConsumerState<ChatInput> {
                 ),
                 const SizedBox(width: 8),
                 CircleAvatar(
+                  backgroundColor: Colors.indigoAccent,
+                  foregroundColor: Colors.white,
                   child: IconButton(
                     onPressed: _send,
-                    icon: const Icon(Icons.send),
+                    icon: const Icon(Icons.send_rounded, size: 20),
                   ),
                 ),
               ],

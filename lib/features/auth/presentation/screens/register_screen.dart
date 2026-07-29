@@ -30,10 +30,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     super.dispose();
   }
 
-  String? _required(
-    String? value,
-    String message,
-  ) {
+  String? _required(String? value, String message) {
     if (value == null || value.trim().isEmpty) {
       return message;
     }
@@ -66,9 +63,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       return 'Email is required';
     }
 
-    final regex = RegExp(
-      r'^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$',
-    );
+    final regex = RegExp(r'^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$');
 
     if (!regex.hasMatch(value.trim())) {
       return 'Invalid email';
@@ -110,7 +105,12 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(e.toString()),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+          content: Text(
+            e.toString().replaceFirst('Exception: ', ''),
+            style: const TextStyle(color: Colors.white),
+          ),
         ),
       );
     }
@@ -121,79 +121,147 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     final authState = ref.watch(authControllerProvider);
 
     return Scaffold(
+      backgroundColor: const Color(0xFF0F1015),
       appBar: AppBar(
-        title: const Text('Register'),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        title: const Text(
+          'Register',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
+        centerTitle: true,
       ),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
           child: Form(
             key: _formKey,
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                const Icon(
-                  Icons.play_circle_fill_rounded,
-                  color: Colors.red,
-                  size: 90,
-                ),
+                const SizedBox(height: 10),
 
-                const SizedBox(height: 30),
-
-                AppTextField(
-                  controller: _displayNameController,
-                  label: 'Display Name',
-                  validator: (value) =>
-                      _required(value, 'Display name is required'),
-                  textInputAction: TextInputAction.next,
-                ),
-
-                const SizedBox(height: 16),
-
-                AppTextField(
-                  controller: _usernameController,
-                  label: 'Username',
-                  validator: _validateUsername,
-                  textInputAction: TextInputAction.next,
-                ),
-
-                const SizedBox(height: 16),
-
-                AppTextField(
-                  controller: _emailController,
-                  label: 'Email',
-                  keyboardType: TextInputType.emailAddress,
-                  validator: _validateEmail,
-                  textInputAction: TextInputAction.next,
+                // Animated Glowing App Avatar Header
+                Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: const Color(0xFF16181E),
+                    border: Border.all(
+                      color: const Color(0xFF536DFE).withOpacity(0.3),
+                      width: 2,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF536DFE).withOpacity(0.2),
+                        blurRadius: 24,
+                        spreadRadius: 2,
+                      ),
+                    ],
+                  ),
+                  child: const CircleAvatar(
+                    radius: 45,
+                    backgroundColor: Color(0xFF222530),
+                    backgroundImage: AssetImage('assets/icons/app_icon.png'),
+                  ),
                 ),
 
                 const SizedBox(height: 16),
 
-                AppTextField(
-                  controller: _passwordController,
-                  label: 'Password',
-                  isPassword: true,
-                  validator: _validatePassword,
+                const Text(
+                  'Join WatchNest',
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                const Text(
+                  'Create an account to watch together',
+                  style: TextStyle(fontSize: 14, color: Colors.white54),
                 ),
 
-                const SizedBox(height: 30),
+                const SizedBox(height: 28),
 
-                AppButton(
-                  text: 'Create Account',
-                  isLoading: authState.isLoading,
-                  onPressed: _register,
+                // Main Input Card Surface
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF16181E),
+                    borderRadius: BorderRadius.circular(24),
+                    border: Border.all(color: Colors.white.withOpacity(0.08)),
+                  ),
+                  child: Column(
+                    children: [
+                      AppTextField(
+                        controller: _displayNameController,
+                        label: 'Display Name',
+                        validator: (value) =>
+                            _required(value, 'Display name is required'),
+                        textInputAction: TextInputAction.next,
+                      ),
+
+                      const SizedBox(height: 16),
+
+                      AppTextField(
+                        controller: _usernameController,
+                        label: 'Username',
+                        validator: _validateUsername,
+                        textInputAction: TextInputAction.next,
+                      ),
+
+                      const SizedBox(height: 16),
+
+                      AppTextField(
+                        controller: _emailController,
+                        label: 'Email',
+                        keyboardType: TextInputType.emailAddress,
+                        validator: _validateEmail,
+                        textInputAction: TextInputAction.next,
+                      ),
+
+                      const SizedBox(height: 16),
+
+                      AppTextField(
+                        controller: _passwordController,
+                        label: 'Password',
+                        isPassword: true,
+                        validator: _validatePassword,
+                      ),
+
+                      const SizedBox(height: 28),
+
+                      AppButton(
+                        text: 'Create Account',
+                        isLoading: authState.isLoading,
+                        onPressed: _register,
+                      ),
+                    ],
+                  ),
                 ),
 
-                const SizedBox(height: 20),
+                const SizedBox(height: 24),
 
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Text('Already have an account?'),
+                    const Text(
+                      'Already have an account?',
+                      style: TextStyle(color: Colors.white60, fontSize: 14),
+                    ),
                     TextButton(
                       onPressed: () {
                         context.pop();
                       },
-                      child: const Text('Login'),
+                      style: TextButton.styleFrom(
+                        foregroundColor: const Color(0xFF536DFE),
+                      ),
+                      child: const Text(
+                        'Login',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
                     ),
                   ],
                 ),

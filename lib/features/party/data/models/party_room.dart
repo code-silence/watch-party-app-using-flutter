@@ -5,7 +5,6 @@ class PartyRoom {
   final bool isPlaying;
   final double currentSecond;
   final int createdAt;
-  final int? lastHeartbeat;
   final Map<String, Map<String, dynamic>> participants;
 
   const PartyRoom({
@@ -16,7 +15,6 @@ class PartyRoom {
     required this.currentSecond,
     required this.createdAt,
     required this.participants,
-    this.lastHeartbeat,
   });
 
   factory PartyRoom.fromMap(String roomCode, Map<dynamic, dynamic> map) {
@@ -29,7 +27,6 @@ class PartyRoom {
       isPlaying: map['isPlaying'] ?? false,
       currentSecond: (map['currentSecond'] ?? 0).toDouble(),
       createdAt: map['createdAt'] ?? 0,
-      lastHeartbeat: map['lastHeartbeat'],
       participants: rawParticipants.map(
         (key, value) =>
             MapEntry(key.toString(), Map<String, dynamic>.from(value as Map)),

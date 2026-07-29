@@ -53,7 +53,6 @@ class PartyRepository {
         'updatedAt': ServerValue.timestamp,
       },
       'createdAt': ServerValue.timestamp,
-      'lastHeartbeat': ServerValue.timestamp,
       'participants': {
         firebaseUser.uid: {
           'displayName': user['displayName'],
@@ -113,11 +112,6 @@ class PartyRepository {
     await roomRef.child('participants').child(user.uid).remove();
   }
 
-  Future<void> updateHeartbeat(String roomCode) async {
-    await _roomsRef.child(roomCode).update({
-      'lastHeartbeat': ServerValue.timestamp,
-    });
-  }
 
   Future<void> deleteRoom(String roomCode) async {
     await _roomsRef.child(roomCode).remove();
