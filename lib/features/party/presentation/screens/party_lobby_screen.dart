@@ -23,12 +23,12 @@ class _PartyLobbyScreenState extends ConsumerState<PartyLobbyScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      barrierColor: Colors.transparent,
       useSafeArea: true,
       backgroundColor: const Color(0xFF16181E),
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      barrierColor: Colors.black54,
       builder: (context) {
         return DraggableScrollableSheet(
           expand: false,

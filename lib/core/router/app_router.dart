@@ -8,6 +8,8 @@ import '../../features/home/presentation/screens/home_screen.dart';
 import '../../features/party/presentation/screens/create_party_screen.dart';
 import '../../features/party/presentation/screens/join_party_screen.dart';
 import '../../features/party/presentation/screens/party_lobby_screen.dart';
+import '../../features/settings/presentation/about_screen.dart';
+import '../../features/settings/presentation/contact_screen.dart';
 
 final appRouter = GoRouter(
   initialLocation: '/',
@@ -40,6 +42,13 @@ final appRouter = GoRouter(
 
         return PartyLobbyScreen(roomCode: roomCode);
       },
+    ),
+
+    GoRoute(path: '/about', builder: (context, state) => const AboutScreen()),
+
+    GoRoute(
+      path: '/contact',
+      builder: (context, state) => const ContactScreen(),
     ),
   ],
 );

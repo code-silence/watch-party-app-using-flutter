@@ -143,6 +143,24 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
 
                   const SizedBox(height: 14),
 
+                  // --- ABOUT WATCHNEST ---
+                  _buildGamingActionButton(
+                    context: context,
+                    title: 'ABOUT WATCHNEST',
+                    subtitle: 'App info & version details',
+                    icon: Icons.info_outline_rounded,
+                    gradientColors: [
+                      const Color(0xFFFF007F),
+                      const Color(0xFFFF5E3A),
+                    ],
+                    onTap: () {
+                      SoundService.tap();
+                      context.push('/about');
+                    },
+                  ),
+
+                  const SizedBox(height: 14),
+
                   _buildGamingActionButton(
                     context: context,
                     title: 'LOGOUT',

@@ -6,6 +6,8 @@ import 'package:go_router/go_router.dart';
 import '../../providers/party_controller.dart';
 import 'package:watch_nest/features/party/presentation/widgets/active_room_fab.dart';
 import '../../../profile/providers/profile_provider.dart';
+import '../../../../shared/services/sound_service.dart';
+
 
 class CreatePartyScreen extends ConsumerStatefulWidget {
   const CreatePartyScreen({super.key});
@@ -42,6 +44,8 @@ class _CreatePartyScreenState extends ConsumerState<CreatePartyScreen>
     try {
       final roomCode =
           await ref.read(partyControllerProvider.notifier).createRoom();
+          SoundService.trigger();
+
 
       if (!context.mounted) return;
 
