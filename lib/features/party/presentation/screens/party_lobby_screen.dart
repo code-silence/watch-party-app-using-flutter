@@ -10,7 +10,6 @@ import '../../../chat/widgets/party_chat.dart';
 import '../../../chat/widgets/chat_input.dart';
 import '../../../chat/providers/chat_provider.dart';
 
-
 class PartyLobbyScreen extends ConsumerStatefulWidget {
   const PartyLobbyScreen({super.key, required this.roomCode});
 
@@ -448,7 +447,7 @@ class _PartyLobbyScreenState extends ConsumerState<PartyLobbyScreen> {
                       ),
                       child: SyncedYoutubePlayer(roomCode: widget.roomCode),
                     ),
-                    
+
                     // Sleek Room Info Card
                     Container(
                       padding: const EdgeInsets.symmetric(
@@ -540,7 +539,6 @@ class _PartyLobbyScreenState extends ConsumerState<PartyLobbyScreen> {
                     const SizedBox(height: 20),
 
                     // Player Container with Border Glow
-                    
                   ],
                 ),
               ),

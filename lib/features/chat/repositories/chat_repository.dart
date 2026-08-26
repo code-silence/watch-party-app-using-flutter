@@ -40,21 +40,23 @@ class ChatRepository {
         lastRead = room['lastRead'][uid] as int;
       }
 
-      int latestMessage = 0;
+      int latestUnreadMessage = 0;
 
       if (room['chat'] != null) {
         final chat = room['chat'] as Map<dynamic, dynamic>;
 
         for (final value in chat.values) {
           final createdAt = value['createdAt'] as int? ?? 0;
+          final senderUid = value['senderUid'] as String? ?? '';
 
-          if (createdAt > latestMessage) {
-            latestMessage = createdAt;
+          // Only count messages sent by other users
+          if (senderUid != uid && createdAt > latestUnreadMessage) {
+            latestUnreadMessage = createdAt;
           }
         }
       }
 
-      return latestMessage > lastRead;
+      return latestUnreadMessage > lastRead;
     });
   }
 
