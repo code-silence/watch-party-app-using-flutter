@@ -56,14 +56,29 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           shaderCallback: (bounds) => const LinearGradient(
             colors: [Color(0xFF00F2FE), Color(0xFF4FACFE)],
           ).createShader(bounds),
-          child: const Text(
-            'WATCHNEST',
-            style: TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.w900,
-              letterSpacing: 3.0,
-              color: Colors.white,
-            ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: const [
+              Text(
+                'WATCHNEST',
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 3.0,
+                  color: Colors.white,
+                ),
+              ),
+              SizedBox(width: 8),
+              Text(
+                'BETA',
+                style: TextStyle(
+                  fontSize: 9,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 1.5,
+                  color: Colors.white,
+                ),
+              ),
+            ],
           ),
         ),
       ),

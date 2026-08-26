@@ -5,12 +5,16 @@ import '../models/chat_message.dart';
 import '../repositories/chat_repository.dart';
 
 final chatRepositoryProvider = Provider((ref) {
-  return ChatRepository(
-    ref.read(authServiceProvider),
-  );
+  return ChatRepository(ref.read(authServiceProvider));
 });
 
-final chatProvider =
-    StreamProvider.family<List<ChatMessage>, String>((ref, roomCode) {
+final chatProvider = StreamProvider.family<List<ChatMessage>, String>((
+  ref,
+  roomCode,
+) {
   return ref.read(chatRepositoryProvider).messages(roomCode);
+});
+
+final unreadChatProvider = StreamProvider.family<bool, String>((ref, roomCode) {
+  return ref.read(chatRepositoryProvider).hasUnreadMessages(roomCode);
 });

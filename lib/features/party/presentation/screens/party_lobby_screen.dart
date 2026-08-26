@@ -8,6 +8,8 @@ import '../../providers/party_provider.dart';
 import '../../../youtube/presentation/widgets/synced_youtube_player.dart';
 import '../../../chat/widgets/party_chat.dart';
 import '../../../chat/widgets/chat_input.dart';
+import '../../../chat/providers/chat_provider.dart';
+
 
 class PartyLobbyScreen extends ConsumerStatefulWidget {
   const PartyLobbyScreen({super.key, required this.roomCode});
@@ -19,7 +21,8 @@ class PartyLobbyScreen extends ConsumerStatefulWidget {
 }
 
 class _PartyLobbyScreenState extends ConsumerState<PartyLobbyScreen> {
-  void _showChatSheet(BuildContext context) {
+  Future<void> _showChatSheet(BuildContext context) async {
+    await ref.read(chatRepositoryProvider).markAsRead(widget.roomCode);
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -200,6 +203,7 @@ class _PartyLobbyScreenState extends ConsumerState<PartyLobbyScreen> {
   @override
   Widget build(BuildContext context) {
     final room = ref.watch(partyRoomProvider(widget.roomCode));
+    final hasUnread = ref.watch(unreadChatProvider(widget.roomCode));
 
     return room.when(
       loading: () => const Scaffold(
@@ -219,13 +223,16 @@ class _PartyLobbyScreenState extends ConsumerState<PartyLobbyScreen> {
       ),
       data: (party) {
         if (party == null) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (context.mounted) {
+              context.go('/home');
+            }
+          });
+
           return const Scaffold(
             backgroundColor: Color(0xFF0F1015),
             body: Center(
-              child: Text(
-                'Room not found',
-                style: TextStyle(color: Colors.white70, fontSize: 16),
-              ),
+              child: CircularProgressIndicator(color: Colors.indigoAccent),
             ),
           );
         }
@@ -257,15 +264,27 @@ class _PartyLobbyScreenState extends ConsumerState<PartyLobbyScreen> {
               ],
             ),
             actions: [
-              IconButton(
-                tooltip: 'Chat',
-                icon: const Icon(
-                  Icons.chat_bubble_outline_rounded,
-                  color: Colors.white70,
-                ),
-                onPressed: () {
-                  _showChatSheet(context);
-                },
+              Stack(
+                children: [
+                  IconButton(
+                    tooltip: 'Chat',
+                    icon: const Icon(
+                      Icons.chat_bubble_outline_rounded,
+                      color: Colors.white70,
+                    ),
+                    onPressed: () => _showChatSheet(context),
+                  ),
+
+                  if (hasUnread.value == true)
+                    const Positioned(
+                      right: 10,
+                      top: 10,
+                      child: CircleAvatar(
+                        radius: 5,
+                        backgroundColor: Colors.red,
+                      ),
+                    ),
+                ],
               ),
               Stack(
                 alignment: Alignment.center,
@@ -404,116 +423,126 @@ class _PartyLobbyScreenState extends ConsumerState<PartyLobbyScreen> {
               ),
             ],
           ),
-          body: SafeArea(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  // Sleek Room Info Card
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 12,
+          body: GestureDetector(
+            behavior: HitTestBehavior.translucent,
+            onTap: () {
+              FocusManager.instance.primaryFocus?.unfocus();
+            },
+            child: SafeArea(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Container(
+                      clipBehavior: Clip.antiAlias,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.5),
+                            blurRadius: 16,
+                            offset: const Offset(0, 8),
+                          ),
+                        ],
+                      ),
+                      child: SyncedYoutubePlayer(roomCode: widget.roomCode),
                     ),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF16181E),
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: Colors.white.withOpacity(0.08)),
-                    ),
-                    child: Row(
-                      children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'ROOM CODE',
-                              style: TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.indigoAccent,
-                                letterSpacing: 1.2,
-                              ),
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              party.roomCode,
-                              style: const TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.w800,
-                                color: Colors.white,
-                                letterSpacing: 1.5,
-                              ),
-                            ),
-                          ],
+                    
+                    // Sleek Room Info Card
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF16181E),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: Colors.white.withOpacity(0.08),
                         ),
-                        const Spacer(),
-                        InkWell(
-                          borderRadius: BorderRadius.circular(12),
-                          onTap: () async {
-                            HapticFeedback.lightImpact();
-                            await Clipboard.setData(
-                              ClipboardData(text: party.roomCode),
-                            );
-
-                            if (!context.mounted) return;
-
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                behavior: SnackBarBehavior.floating,
-                                backgroundColor: const Color(0xFF222530),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Row(
+                        children: [
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'ROOM CODE',
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.indigoAccent,
+                                  letterSpacing: 1.2,
                                 ),
-                                content: const Row(
-                                  children: [
-                                    Icon(
-                                      Icons.check_circle,
-                                      color: Colors.greenAccent,
-                                      size: 18,
-                                    ),
-                                    SizedBox(width: 8),
-                                    Text('Room code copied to clipboard'),
-                                  ],
-                                ),
-                                duration: const Duration(seconds: 2),
                               ),
-                            );
-                          },
-                          child: Container(
-                            padding: const EdgeInsets.all(10),
-                            decoration: BoxDecoration(
-                              color: Colors.indigoAccent.withOpacity(0.12),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: const Icon(
-                              Icons.copy_rounded,
-                              color: Colors.indigoAccent,
-                              size: 20,
+                              const SizedBox(height: 2),
+                              Text(
+                                party.roomCode,
+                                style: const TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w800,
+                                  color: Colors.white,
+                                  letterSpacing: 1.5,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const Spacer(),
+                          InkWell(
+                            borderRadius: BorderRadius.circular(12),
+                            onTap: () async {
+                              HapticFeedback.lightImpact();
+                              await Clipboard.setData(
+                                ClipboardData(text: party.roomCode),
+                              );
+
+                              if (!context.mounted) return;
+
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  behavior: SnackBarBehavior.floating,
+                                  backgroundColor: const Color(0xFF222530),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  content: const Row(
+                                    children: [
+                                      Icon(
+                                        Icons.check_circle,
+                                        color: Colors.greenAccent,
+                                        size: 18,
+                                      ),
+                                      SizedBox(width: 8),
+                                      Text('Room code copied to clipboard'),
+                                    ],
+                                  ),
+                                  duration: const Duration(seconds: 2),
+                                ),
+                              );
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.all(10),
+                              decoration: BoxDecoration(
+                                color: Colors.indigoAccent.withOpacity(0.12),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: const Icon(
+                                Icons.copy_rounded,
+                                color: Colors.indigoAccent,
+                                size: 20,
+                              ),
                             ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 20),
+                    const SizedBox(height: 20),
 
-                  // Player Container with Border Glow
-                  Container(
-                    clipBehavior: Clip.antiAlias,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(20),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.5),
-                          blurRadius: 16,
-                          offset: const Offset(0, 8),
-                        ),
-                      ],
-                    ),
-                    child: SyncedYoutubePlayer(roomCode: widget.roomCode),
-                  ),
-                ],
+                    // Player Container with Border Glow
+                    
+                  ],
+                ),
               ),
             ),
           ),

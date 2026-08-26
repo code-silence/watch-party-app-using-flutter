@@ -65,7 +65,7 @@ class _JoinPartyScreenState extends ConsumerState<JoinPartyScreen>
 
       if (!mounted) return;
 
-      context.push('/party/$roomCode');
+      context.go('/party/$roomCode');
     } catch (e) {
       if (!mounted) return;
 

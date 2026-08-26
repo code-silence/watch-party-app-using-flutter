@@ -49,7 +49,7 @@ class _CreatePartyScreenState extends ConsumerState<CreatePartyScreen>
 
       if (!context.mounted) return;
 
-      context.push('/party/$roomCode');
+      context.go('/party/$roomCode');
     } catch (e) {
       if (!context.mounted) return;
 

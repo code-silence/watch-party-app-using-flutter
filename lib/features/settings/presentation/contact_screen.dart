@@ -83,8 +83,8 @@ class ContactScreen extends StatelessWidget {
               // --- CONTACT OPTIONS ---
               _buildContactTile(
                 context: context,
-                title: 'Email',
-                subtitle: 'Send a direct message',
+                title: 'Email (Recommended)',
+                subtitle: 'Any feedback is appreciated',
                 iconWidget: const Icon(Icons.email_rounded, color: Color(0xFFEA4335), size: 20),
                 accentColor: const Color(0xFFEA4335), // Google Red
                 onTap: () => _launchURL(context, 'mailto:arnob8855@gmail.com'),
@@ -95,7 +95,7 @@ class ContactScreen extends StatelessWidget {
               _buildContactTile(
                 context: context,
                 title: 'Telegram',
-                subtitle: 'arnob8855',
+                subtitle: 'connect me on telegram',
                 iconWidget: const FaIcon(FontAwesomeIcons.telegram, color: Color(0xFF229ED9), size: 20),
                 accentColor: const Color(0xFF229ED9), // Telegram Blue
                 onTap: () => _launchURL(context, 'https://t.me/arnob8855'),
@@ -193,7 +193,7 @@ class ContactScreen extends StatelessWidget {
                     child: CircleAvatar(
                       radius: 35,
                       backgroundColor: Color(0xFF0B0E14),
-                      backgroundImage: AssetImage('assets/avatars/arnob.jpeg'),
+                      backgroundImage: AssetImage('assets/avatars/code_silence.jpg'),
                     ),
                   ),
                 ),
@@ -202,7 +202,7 @@ class ContactScreen extends StatelessWidget {
 
                 // Name
                 const Text(
-                  'Arnob Das',
+                  'code_silence',
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 18,
