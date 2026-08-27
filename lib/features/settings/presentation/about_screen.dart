@@ -136,13 +136,17 @@ class AboutScreen extends StatelessWidget {
                     _buildTile(
                       icon: Icons.privacy_tip_outlined,
                       title: 'Privacy Policy',
-                      onTap: () {},
+                      onTap: () {
+                        context.push('/privacy-policy');
+                      },
                     ),
                     Divider(color: Colors.white.withOpacity(0.05), height: 1),
                     _buildTile(
                       icon: Icons.description_outlined,
                       title: 'Terms of Service',
-                      onTap: () {},
+                      onTap: () {
+                        context.push('/terms-of-service');
+                      },
                     ),
                     Divider(color: Colors.white.withOpacity(0.05), height: 1),
                     _buildTile(

@@ -10,6 +10,10 @@ import '../../features/party/presentation/screens/join_party_screen.dart';
 import '../../features/party/presentation/screens/party_lobby_screen.dart';
 import '../../features/settings/presentation/about_screen.dart';
 import '../../features/settings/presentation/contact_screen.dart';
+import '../../features/settings/presentation/privacy_policy_screen.dart';
+import '../../features/settings/presentation/terms_of_service_screen.dart';
+
+
 
 final appRouter = GoRouter(
   initialLocation: '/',
@@ -50,5 +54,21 @@ final appRouter = GoRouter(
       path: '/contact',
       builder: (context, state) => const ContactScreen(),
     ),
+
+    GoRoute(
+      path: '/contact',
+      builder: (context, state) => const ContactScreen(),
+    ),
+
+    GoRoute(
+      path: '/privacy-policy',
+      builder: (context, state) => const PrivacyPolicyScreen(),
+    ),
+
+    GoRoute(
+      path: '/terms-of-service',
+      builder: (context, state) => const TermsOfServiceScreen(),
+    ),
+
   ],
 );
